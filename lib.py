@@ -12,11 +12,13 @@ import pandas as pd
 from datetime import datetime
 from sklearn.metrics import accuracy_score, f1_score
 
-actual_path= '/root/autodl-tmp/projects/PromptHate/Dataset/harmc/test.jsonl'
+harmc_actual_path= './images/harmc/test.jsonl'
+fhm_1000_actual_path= './images/FHM/1000_test.jsonl'
+fhm_500_actual_path= './images/FHM/500_test.jsonl'
 
 # 可以处理 harmc 和 harmp 的 xxx.jsonl
 def read_harm_actual_result():
-    path = actual_path
+    path = harmc_actual_path
     if not os.path.isfile(path):
         raise Exception(f'{path} is not valid result file')
     dic = {}
@@ -34,6 +36,26 @@ def read_harm_actual_result():
                 else:
                     continue
     return dic
+
+
+# 可以处理 FHM 和 download_memes 的 xxx.jsonl
+def read_FHM_actual_result():
+    path = fhm_1000_actual_path
+    dic = {}
+    def get_img_name(s):
+        splits = s.split('/')
+        if len(splits) > 1:
+            return splits[1]
+        return splits[0]
+
+    with open(path) as f:
+        for line in f.readlines():
+            obj = json.loads(line)
+            if obj.get('label') == '':
+                continue
+            dic[get_img_name(obj.get('img'))] = obj.get('label')
+    return dic
+
 
 # 获取 path 下的所有文件的绝对地址
 def recursive_get_image_paths(path):
@@ -142,11 +164,19 @@ def calculate_accuracy(result_map):
     calculate_wrong_predict(predict_list, actual_list)
 
 def calculate_wrong_predict(predict, actual):
+    harm_to_harm = 0
+    no_harm_to_no_harm = 0
     harm_to_not_harm = 0
     not_harm_to_harm = 0
     for i in range(len(predict)):
         if predict[i] == -1:
             continue
+        if actual[i] == predict[i]:
+            # 预测错了
+            if actual[i] == 0:
+                no_harm_to_no_harm += 1
+            if actual[i] == 1:
+                harm_to_harm += 1
         if actual[i] != predict[i]:
             # 预测错了
             if actual[i] == 0:
@@ -157,3 +187,7 @@ def calculate_wrong_predict(predict, actual):
                  f"占比总数：{harm_to_not_harm / len(predict)}\n")
     logging.info(f"预测错的情况 - [non-harmful -> harmful] count={not_harm_to_harm}, "
                  f"占比总数：{not_harm_to_harm / len(predict)}\n")
+    logging.info(f"预测对的情况 - [harmful -> harmful] count={harm_to_harm}, "
+                 f"占比总数：{harm_to_harm / len(predict)}\n")
+    logging.info(f"预测对的情况 - [non-harmful -> non-harmful] count={no_harm_to_no_harm}, "
+                 f"占比总数：{no_harm_to_no_harm / len(predict)}\n")

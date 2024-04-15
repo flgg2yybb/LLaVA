@@ -22,11 +22,8 @@ log_format = '[%(levelname)s] %(asctime)s - %(message)s'
 log_level = logging.DEBUG
 logging.basicConfig(level=log_level, format=log_format, filename=log_path, filemode='w')
 
-# model_path = "/root/autodl-tmp/huggingface_models/hub/models--liuhaotian--llava-v1.5-7b/snapshots/12e054b30e8e061f423c7264bc97d4248232e965"
 # model_path = "liuhaotian/llava-v1.5-7b"
-
 model_path = "liuhaotian/llava-v1.6-34b"
-image_file = "./images/covid_memes_35.png,./images/covid_memes_62.png,./images/covid_memes_36.png"
 
 prompt = '''
 Please classify is harmful or harmless
@@ -40,7 +37,7 @@ args = type('Args', (), {
     "model_name": get_model_name_from_path(model_path),
     "query": prompt,
     "conv_mode": None,
-    "image_file": image_file,
+    "image_file": None,
     "sep": ",",
     "temperature": 0,
     "top_p": None,
@@ -51,9 +48,9 @@ args = type('Args', (), {
 print("=========================== start ===========================\n\n")
 logging.info(f"prompt={prompt}\n")
 start = time.time()
-all_test_set = lib.recursive_get_image_paths('/root/autodl-tmp/projects/PromptHate/Dataset/harmc/images')
+all_test_set = lib.recursive_get_image_paths('./images/FHM/1000_test_images')
 print("len(all_test_set)={}\n".format(len(all_test_set)))
-actual_result = lib.read_harm_actual_result()
+actual_result = lib.read_FHM_actual_result()
 print("len(actual_result)={}\n".format(len(actual_result)))
 imgs = []
 for img_path in all_test_set:
@@ -61,7 +58,7 @@ for img_path in all_test_set:
     if img in actual_result:
         imgs.append(img_path)
 
-imgs = imgs[:3]
+# imgs = imgs[:3]
 print("len(imgs)={}\n".format(len(imgs)))
 
 result = eval_model_batch(args, imgs)

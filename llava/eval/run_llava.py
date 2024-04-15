@@ -177,6 +177,7 @@ def eval_model_batch(args, images):
     prompt = conv.get_prompt()
 
     result = []
+    print(f"imgs:{len(images)}\n")
     for i, img in enumerate(images):
         print(f"[{i}st] doing eval_model_batch\n")
         images = load_images([img])
@@ -192,7 +193,6 @@ def eval_model_batch(args, images):
             .unsqueeze(0)
             .cuda()
         )
-
         with torch.inference_mode():
             output_ids = model.generate(
                 input_ids,
@@ -205,7 +205,6 @@ def eval_model_batch(args, images):
                 max_new_tokens=args.max_new_tokens,
                 use_cache=True,
             )
-
         outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
         result.append(outputs)
     return result
